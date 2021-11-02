@@ -1,86 +1,154 @@
-// const http = require('http');
+const MongoClient = require('mongodb').MongoClient;
 
-// const hostname = '127.0.0.1';
-// const port = 3000;
+// Connection url
+const url = 'mongodb://localhost:27017/myproject';
 
-// const server = http.createServer((req, res) => {
-//   res.statusCode = 200;
-//   res.setHeader('Content-Type', 'text/plain');
-//   res.end('Hello World');
-// });
+MongoClient.connect(url, function(err, db){
+	if(err){
+		return console.dir(err);
+	}
+	console.log('Connected to mongodb');
 
-// server.listen(port, hostname, () => {
-//   console.log(`Server running at http://${hostname}:${port}/`);
-// });
-// <-------------------------------------till now simple node js stuff---------------------------------------->
-// // Synchronous or blocking
-// // - line by line execution
+	/*
+	InsertDocument(db, function(){
+		db.close();
+	});
+	*/
 
-// // Asynchronous or non-blocking
-// // - line by line execution not guaranteed
-// // - callbacks will fire
+	/*
+	InsertDocuments(db, function(){
+		db.close();
+	});
+	*/
 
-// const fs = require("fs");
-// fs.readFile("dele.txt", "utf-8", (err, data)=>{          // this syntax is really important.
-//     console.log(data);
-// });
-// console.log("This is a message");
-
-//use npm init to use node package manager.
-// in the terminal write npm init and then fill it up whatever it is asking for.
+	
+	FindDocuments(db, function(){
+		db.close();
+	});
 
 
+	/*
+	QueryDocuments(db, function(){
+		db.close();
+	});
+	*/
 
-// <-------------------------------------till now node js tuts---------------------------------------->
-const express = require("express");
-const fs= require("fs"); // this will be used in pug to join with the views directory.
-const app = express();
-const port = 80;
-// The GET and POST are two different types of HTTP requests. GET is used for viewing something, without changing it, while POST is used for changing something. For example, a search page should use GET to get data while a form that changes your password should use POST. Essentially GET is used to retrieve remote data, and POST is used to insert/update remote data.
- 
-app.use('/static', express.static('static'))// THIS IS USED FOR VIEWING STATIC FILES. THE JS WONT BE RENDERED BUT THE USER CAN VIEW IT.
-// MAKE A STATIC FOLDER AND THEN MAKE INDEX.JS FILE 
-// IN THE SEARCH BAR TYPE  http://localhost/static/index.js to see the static files.
+	/*
+	UpdateDocument(db, function(){
+		db.close();
+	});
+	*/
 
+	/*
+	RemoveDocument(db, function(){
+		db.close();
+	});
+	*/
 
-app.get("/", (req, res)=>{ 
-    res.status(200).send("This is homepage of my first express app with Harry");
 });
 
-app.get("/about", (req, res)=>{
-    res.send("This is about page of my first express app with Harry");
-});
+// Insert Single Doc
+const InsertDocument = function(db, callback){
+	// Get Collection
+	const collection = db.collection('users');
+	// Insert Docs
+	collection.insert({
+		name: 'Brad Traversy',
+		email: 'brad@test.com'
+	}, function(err, result){
+		if(err){
+			return console.dir(err);
+		}
+		console.log('Inserted Document');
+		console.log(result);
+		callback(result);
+	});
+}
 
-app.post("/about", (req, res)=>{
-    res.send("This is a post request about page of my first express app with Harry");
-});
-app.get("/this", (req, res)=>{
-    res.status(404).send("This page is not found on my website cwh");
-});
+// Insert Multiple Docs
+const InsertDocuments = function(db, callback){
+	// Get Collection
+	const collection = db.collection('users');
+	collection.insertMany([
+		{
+			name:'John Doe',
+			email: 'john@test.com'
+		},
+		{
+			name:'Sam Smith',
+			email: 'ssmith@test.com'
+		},
+		{
+			name:'Jose Gomez',
+			email: 'jgomez@test.com'
+		}
+	],
+	function(err, result){
+		if(err){
+			return console.dir(err);
+		}
+		console.log('Inserted '+result.ops.length+' documents');
+		callback(result);
+	});
+}
 
-app.listen(port, ()=>{
-    console.log(`The application started successfully on port ${port}`);
-});
-// <-------------------------------------till now express specific stuff---------------------------------------->
+// Find Documents
+const FindDocuments = function(db, callback){
+	// Get Collection
+	const collection = db.collection('users');
 
+	collection.find({}).toArray(function(err, docs){
+		if(err){
+			return console.dir(err);
+		}
+		console.log('Found the following records');
+		console.log(docs);
+		callback(docs);
+	});
+}
 
-// A template engine enables you to use static template files in your application. At runtime, the template engine replaces variables in a template file with actual values, and transforms the template into an HTML file sent to the client. ... Some popular template engines that work with Express are Pug, Mustache, and EJS.
+// Query Documents
+const QueryDocuments = function(db, callback){
+	// Get Collection
+	const collection = db.collection('users');
 
-// use `npm i pug --save` in the terminal
-const path=require("path"); // use this to use `path.join`
+	collection.find({'name': 'John Doe'}).toArray(function(err, docs){
+		if(err){
+			return console.dir(err);
+		}
+		console.log('Found the following records');
+		console.log(docs);
+		callback(docs);
+	});
+}
 
-// pug specific stuff
-app.set('view engine', 'pug')
-app.set('views', path.join(__dirname, 'views'))
+// Update Document
+const UpdateDocument = function(db, callback){
+	// Get Collection
+	const collection = db.collection('users');
 
-//endpoints
-app.get("/demo", (req, res)=>{ 
-    res.status(200).render('demo', { title: 'Hey Harry', message: 'Hello there and thanks for telling me how to use pubG!' })
-});
-app.get("/actual", (req, res)=>{ 
-    res.status(200).render('actual')                           //only to render file.
-});
-app.get("/actual1", (req, res)=>{ 
-    let params={ 'title':'hello', 'varx':'sdaf'}                //render files plus sending variables.
-    res.status(200).render('actual',params) 
-});
+	collection.updateOne({name:'John Doe'},
+		{$set: {email:'john@something.com'}}, 
+		function(err, result){
+			if(err){
+				return console.dir(err);
+			}
+			console.log('Updated Document');
+			callback(result);
+		});
+}
+
+// Remove Document
+const RemoveDocument = function(db, callback){
+	// Get Collection
+	const collection = db.collection('users');
+
+	collection.deleteOne({name:'John Doe'}, function(err, result){
+		if(err){
+			return console.dir(err);
+		}
+		console.log('Removed Document');
+		console.log(result);
+		callback(result);
+	});
+}
